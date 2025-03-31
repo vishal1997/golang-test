@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-app-deployment
+  namespace: default
+  labels:
+    app: go-app
+spec:
+  replicas: 1  # Number of pods to run
+  selector:
+    matchLabels:
+      app: go-app
+  template:
+    metadata:
+      labels:
+        app: go-app
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: sa
+      containers:
+      - name: go-app
+        image: vishal7991/testgo:latest  # Replace with your Docker image (e.g., myregistry.azurecr.io/my-go-app:latest)
+        ports:
+        - containerPort: 8080  # Port your app listens on
+        env:  # Optional environment variables
+        - name: AZURE_CLIENT_ID
+          value: "145385f0-1987-4ffa-a9c5-a84731220641"
+        - name: AZURE_TENANT_ID
+          value: "72f988bf-86f1-41af-91ab-2d7cd011db47"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-app-service
+spec:
+  selector:
+    app: go-app
+  ports:
+    - protocol: TCP
+      port: 80        # Service port
+      targetPort: 8080  # Container port
+  type: LoadBalancer  # Expose the service externally via a LoadBalancer
