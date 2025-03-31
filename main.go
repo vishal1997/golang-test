@@ -47,49 +47,11 @@ func getLatestLSN2(container *azcosmos.ContainerClient) (int64, error) {
 		}
 
 		// If `_lsn` is included in headers, extract it
-		fmt.Println("Header Value:", resp.RawResponse.Header)
 		lsn := resp.RawResponse.Header.Get("lsn")
 		fmt.Println("LSN Value:", lsn)
 	}
 	return lsn, nil
 }
-
-// Fetch the latest LSN for a partition
-/**
-func getLatestLSN(container *azcosmos.ContainerClient, partitionKey string) (int64, error) {
-	log.Printf("Fetching latest LSN for partition key: %s", partitionKey)
-	ctx := context.TODO()
-	query := "SELECT VALUE MAX(c._lsn) FROM c"
-	options := &azcosmos.QueryOptions{
-		ContinuationToken: nil, // Start with nil
-	}
-
-	iterator := container.NewQueryItemsPager(query, azcosmos.NewPartitionKeyString(partitionKey), options)
-
-	var latestLSN int64
-	for iterator.More() {
-		resp, err := iterator.NextPage(ctx)
-		if err != nil {
-			log.Printf("Error while fetching latest LSN: %v", err)
-			return 0, fmt.Errorf("failed to fetch latest LSN: %v", err)
-		}
-		log.Printf("Received response with %d items", len(resp.Items))
-
-		if len(resp.Items) > 0 {
-			var item map[string]interface{}
-			if err := json.Unmarshal(resp.Items[0], &item); err != nil {
-				log.Printf("Error unmarshaling latest LSN item: %v", err)
-				return 0, fmt.Errorf("failed to unmarshal item: %v", err)
-			}
-			latestLSN = int64(item["_lsn"].(float64))
-		}
-	}
-
-	log.Printf("Fetched latest LSN: %d for partition key: %s", latestLSN, partitionKey)
-	return latestLSN, nil
-}
-
-**/
 
 // Fetch the current LSN from the lease container
 func getCurrentLSN(leaseContainer *azcosmos.ContainerClient, partitionKey string) (int64, error) {
@@ -120,7 +82,7 @@ func getCurrentLSN(leaseContainer *azcosmos.ContainerClient, partitionKey string
 				log.Printf("Error unmarshaling lease item: %v", err)
 				return 0, fmt.Errorf("failed to unmarshal lease item: %v", err)
 			}
-			continuationToken = lease["continuationToken"].(string)
+			continuationToken = lease["ContinuationToken"].(string)
 		}
 	}
 
